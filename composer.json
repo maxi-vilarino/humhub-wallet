@@ -2,8 +2,8 @@
   "name": "vegalsa/wallet",
   "type": "yii2-extension",
   "require": {
-    "firebase/php-jwt": "^6.0",
-    "tschoffelen/php-pkpass": "^1.5"
+    "firebase/php-jwt": "^7.0",
+    "pkpass/pkpass": "^2.5"
   },
   "autoload": {
     "psr-4": {
