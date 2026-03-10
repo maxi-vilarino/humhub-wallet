@@ -1,0 +1,7 @@
+{
+  "id": "wallet",
+  "name": "Wallet Integration",
+  "description": "Añade la tarjeta de empleado a Google Wallet y Apple Wallet.",
+  "version": "1.0.0",
+  "humhub": { "minVersion": "1.8" }
+}
