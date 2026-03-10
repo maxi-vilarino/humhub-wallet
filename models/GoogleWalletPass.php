@@ -26,7 +26,7 @@ class GoogleWalletPass
      */
     public function createSaveUrl(int $userId, string $fullName, string $ean): string
     {
-        $objectId = "{$this->issuerId}.user_{$userId}_" . time();
+        $objectId = "{$this->issuerId}.user_{$userId}_";
 
         $genericObject = [
             'id'                 => $objectId,

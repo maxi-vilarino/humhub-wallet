@@ -1,6 +1,6 @@
 <?php
 
-namespace humhub\modules\vegalsa_wallet\controllers;
+namespace humhub\modules\wallet\controllers;
 
 use Yii;
 use humhub\components\Controller;

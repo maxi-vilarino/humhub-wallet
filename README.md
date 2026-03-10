@@ -23,13 +23,15 @@ Un módulo de HumHub que permite añadir tarjetas de empleado a Google Wallet y 
 ## Instalación
 
 1. Coloca el módulo en la carpeta de módulos de HumHub:
+
 ```bash
-cp -r wallet /ruta/a/humhub/protected/modules/vegalsa_wallet
+cp -r wallet /ruta/a/humhub/protected/modules/wallet
 ```
 
 2. Instala las dependencias:
+
 ```bash
-cd /ruta/a/humhub/protected/modules/vegalsa_wallet
+cd /ruta/a/humhub/protected/modules/wallet
 composer install
 ```
 
@@ -61,6 +63,7 @@ wallet/
 ### Para Administradores
 
 Accede a la sección de configuración del módulo en la administración de HumHub para:
+
 - Configurar las credenciales de Apple Wallet
 - Configurar las credenciales de Google Wallet
 - Personalizar los datos de los pases

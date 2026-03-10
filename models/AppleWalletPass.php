@@ -15,8 +15,8 @@ class AppleWalletPass
 
     public function __construct()
     {
-        /** @var \humhub\modules\vegalsa_wallet\Module $m */
-        $m = Yii::$app->getModule('vegalsa-wallet');
+        /** @var \humhub\modules\wallet\Module $m */
+        $m = Yii::$app->getModule('wallet');
         $this->certPath   = $m->getAppleCertPath();
         $this->certPass   = $m->getAppleCertPass();
         $this->wwdrPath   = $m->getAppleWwdrPath();
@@ -60,7 +60,7 @@ class AppleWalletPass
         ]);
 
         // Añade los assets gráficos del pass
-        $resPath = Yii::getAlias('@vegalsa-wallet/resources/apple');
+        $resPath = Yii::getAlias('@wallet/resources/apple');
         if (file_exists("$resPath/icon.png"))  $pass->addFile('icon.png',  "$resPath/icon.png");
         if (file_exists("$resPath/icon@2x.png")) $pass->addFile('icon@2x.png', "$resPath/icon@2x.png");
         if (file_exists("$resPath/logo.png"))  $pass->addFile('logo.png',  "$resPath/logo.png");
