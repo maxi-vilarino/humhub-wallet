@@ -6,18 +6,21 @@ use Yii;
 use humhub\components\Controller;
 use humhub\modules\wallet\models\GoogleWalletPass;
 use humhub\modules\wallet\models\AppleWalletPass;
-use humhub\modules\barcode\components\BarcodeGenerator;
+// Usamos el mismo generador que usas en tu vista para evitar errores
+use humhub\modules\qrcode\QrGenerator;
 
 class WalletController extends Controller
 {
     /**
-     * Genera el JWT y redirige a la URL "Añadir a Google Wallet".
+     * Genera el JWT y redirige a la URL de Google Wallet.
      */
     public function actionGoogle()
     {
         $this->requireLogin();
         $user     = Yii::$app->user->identity;
-        $ean      = BarcodeGenerator::completarEAN13($user->profile->fax ?? '');
+
+        // Sincronizamos con el generador de tu vista
+        $ean      = QrGenerator::completarEAN13($user->profile->fax ?? '');
         $fullName = $user->displayName ?? $user->username ?? '';
 
         $saveUrl = (new GoogleWalletPass())->createSaveUrl($user->id, $fullName, $ean);
@@ -26,21 +29,31 @@ class WalletController extends Controller
     }
 
     /**
-     * Genera el .pkpass y lo devuelve como descarga.
+     * Genera el archivo .pkpass y lo sirve al iPhone.
      */
     public function actionApple()
     {
         $this->requireLogin();
         $user     = Yii::$app->user->identity;
-        $ean      = BarcodeGenerator::completarEAN13($user->profile->fax ?? '');
+
+        $ean      = QrGenerator::completarEAN13($user->profile->fax ?? '');
         $fullName = $user->displayName ?? $user->username ?? '';
 
-        $tmpFile = (new AppleWalletPass())->generate($user->id, $fullName, $ean);
+        // Importante: Llamamos a 'createPass' que devuelve el contenido binario
+        $passContent = (new AppleWalletPass())->createPass($user->id, $fullName, $ean);
 
-        return Yii::$app->response->sendFile(
-            $tmpFile,
-            'tarjeta-vegalsa.pkpass',
-            ['mimeType' => 'application/vnd.apple.pkpass', 'inline' => false]
+        if (!$passContent) {
+            throw new \yii\web\ServerErrorHttpException("No se pudo generar la tarjeta de Apple.");
+        }
+
+        // Enviamos el contenido directamente como un archivo descargable
+        return Yii::$app->response->sendContentAsFile(
+            $passContent,
+            'tarjeta-empleado.pkpass',
+            [
+                'mimeType' => 'application/vnd.apple.pkpass',
+                'inline'   => false
+            ]
         );
     }
 }

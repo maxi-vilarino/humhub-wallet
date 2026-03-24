@@ -21,34 +21,43 @@ class GoogleWalletPass
     }
 
     /**
-     * Construye el objeto Generic Pass, lo firma en JWT y
-     * devuelve la URL "https://pay.google.com/gp/v/save/{jwt}".
+     * Construye el objeto Generic Pass con diseño corporativo Vegalsa,
+     * lo firma en JWT y devuelve la URL de guardado.
      */
     public function createSaveUrl(int $userId, string $fullName, string $ean): string
     {
-        $objectId = "{$this->issuerId}.user_{$userId}_";
+        $objectId = "{$this->issuerId}.user_{$userId}" . time();
 
         $genericObject = [
             'id'                 => $objectId,
             'classId'            => "{$this->issuerId}.{$this->classId}",
             'genericType'        => 'GENERIC_TYPE_UNSPECIFIED',
-            'hexBackgroundColor' => '#2e9e6b',
+
+            // ROJO CORPORATIVO EXACTO (Pantone 485 C / RGB 212, 46, 18)
+            'hexBackgroundColor' => '#D42E12',
+
+            'logo' => [
+                'sourceUri' => [
+                    'uri' => 'https://purgeable-nonspherical-teresa.ngrok-free.dev/themes/HumHub/vegalsa/logo_v3.png'
+                ]
+            ],
+
             'cardTitle' => [
                 'defaultValue' => ['language' => 'es-ES', 'value' => 'Vegalsa Eroski'],
             ],
-            'subheader' => [
-                'defaultValue' => ['language' => 'es-ES', 'value' => 'Tarjeta de empleado'],
-            ],
+
+            // HEADER: Nombre del empleado en grande
             'header' => [
-                'defaultValue' => ['language' => 'es-ES', 'value' => $fullName],
+                'defaultValue' => ['language' => 'es-ES', 'value' => mb_strtoupper($fullName)],
             ],
+
+            // CÓDIGO QR: Con el número EAN debajo
             'barcode' => [
-                'type'  => 'EAN_13',
-                'value' => $ean,
+                'type'          => 'QR_CODE',
+                'value'         => (string)$ean,
+                'alternateText' => (string)$ean,
             ],
-            'textModulesData' => [
-                ['header' => 'Nº de tarjeta', 'body' => $ean, 'id' => 'ean'],
-            ],
+
             'state' => 'ACTIVE',
         ];
 

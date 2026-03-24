@@ -17,6 +17,14 @@ class Module extends BaseModule
     const S_APPLE_PASS_TYPE_ID = 'applePassTypeId';
     const S_APPLE_TEAM_ID      = 'appleTeamId';
 
+    /**
+     * Define la URL del botón "configurar" en el panel de administración.
+     */
+    public function getConfigUrl()
+    {
+        return \yii\helpers\Url::to(['/wallet/admin']);
+    }
+
     public function getGoogleCredentials(): string
     {
         return $this->settings->get(self::S_GOOGLE_CREDENTIALS, '');
