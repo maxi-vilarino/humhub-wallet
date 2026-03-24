@@ -5,6 +5,8 @@ namespace humhub\modules\wallet\models;
 use Yii;
 use PKPass\PKPass;
 
+require_once Yii::getAlias('@wallet') . '/vendor/autoload.php';
+
 class AppleWalletPass
 {
     private string $certPath;
@@ -18,9 +20,10 @@ class AppleWalletPass
         /** @var \humhub\modules\wallet\Module $m */
         $m = Yii::$app->getModule('wallet');
 
-        $this->certPath   = $m->getAppleCertPath();
+        $this->certPath = Yii::getAlias('@wallet/resources/apple/certificado_vegalsa.p12');
+        $this->wwdrPath   = Yii::getAlias('@wallet/resources/apple/wwdr.pem');
+
         $this->certPass   = $m->getAppleCertPass();
-        $this->wwdrPath   = $m->getAppleWwdrPath();
         $this->passTypeId = $m->getApplePassTypeId();
         $this->teamId     = $m->getAppleTeamId();
     }
@@ -31,49 +34,55 @@ class AppleWalletPass
     public function createPass(int $userId, string $fullName, string $ean): ?string
     {
         $pass = new PKPass($this->certPath, $this->certPass);
-        $pass->setWWDRcertPath($this->wwdrPath);
+        $pass->setWWDRCertificatePath($this->wwdrPath);
 
-        // Estructura del pase (Diseño Vegalsa)
+        // Estructura del pase (Diseño tarjeta de empleado)
         $pass->setData([
             'formatVersion'      => 1,
             'passTypeIdentifier' => $this->passTypeId,
             'teamIdentifier'     => $this->teamId,
             'serialNumber'       => "user_{$userId}",
-            'backgroundColor'    => 'rgb(212, 46, 24)', // Rojo Vegalsa #D42E18
-            'foregroundColor'    => 'rgb(255, 255, 255)', // Texto Blanco
-            'labelColor'         => 'rgb(255, 255, 255)', // Etiquetas Blancas
-            'logoText'           => 'Vegalsa Eroski',
+            'organizationName'   => 'Vegalsa Eroski',
+
+            'backgroundColor'    => 'rgb(212, 46, 18)',
+            'foregroundColor'    => 'rgb(255, 255, 255)',
+            'labelColor'         => 'rgb(255, 255, 255)',
             'description'        => 'Tarjeta de Empleado Vegalsa',
             'sharingProhibited'  => true,
 
-            // Usamos 'storeCard' para un diseño limpio con QR central
-            'storeCard' => [
+            'generic' => [
                 'primaryFields' => [
                     [
                         'key'   => 'titular',
-                        'label' => 'EMPLEADO',
-                        'value' => mb_strtoupper($fullName), // Nombre en mayúsculas
+                        'label' => '',
+                        'value' => mb_strtoupper($fullName),
                     ],
                 ],
                 'secondaryFields' => [
                     [
-                        'key'   => 'numero',
-                        'label' => 'Nº TARJETA',
-                        'value' => $ean,
+                        'key'   => 'numero_empleado',
+                        'label' => '',
+                        'value' => (string)$ean,
                     ],
                 ],
             ],
-            'barcode' => [
-                'message'         => $ean,
-                'format'          => 'PKBarcodeFormatQR', // Cambiado a QR para coincidir con la imagen
-                'messageEncoding' => 'iso-8859-1',
+
+            'barcodes' => [
+                [
+                    'message'         => (string)$ean,
+                    'format'          => 'PKBarcodeFormatQR',
+                    'messageEncoding' => 'iso-8859-1',
+                    'altText'         => ''
+                ]
             ],
         ]);
 
         // Añadir imágenes (Deben estar en la carpeta resources/apple del módulo)
         $modulePath = Yii::getAlias('@wallet/resources/apple');
-        $pass->addPlaceholderImage("{$modulePath}/icon.png"); // Icono para notificaciones
-        $pass->addPlaceholderImage("{$modulePath}/logo.png"); // Logo superior izquierda
+        $pass->addFile("{$modulePath}/icon.png", 'icon.png');
+        $pass->addFile("{$modulePath}/icon@2x.png", 'icon@2x.png');
+        $pass->addFile("{$modulePath}/logo.png", 'logo.png');
+        $pass->addFile("{$modulePath}/logo@2x.png", 'logo@2x.png');
 
         $fileContent = $pass->create();
 
@@ -83,5 +92,10 @@ class AppleWalletPass
         }
 
         return $fileContent;
+    }
+
+    public function getLastError()
+    {
+        return $this->error;
     }
 }

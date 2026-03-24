@@ -6,54 +6,63 @@ use Yii;
 use humhub\components\Controller;
 use humhub\modules\wallet\models\GoogleWalletPass;
 use humhub\modules\wallet\models\AppleWalletPass;
-// Usamos el mismo generador que usas en tu vista para evitar errores
 use humhub\modules\qrcode\QrGenerator;
+use yii\web\HttpException;
+use yii\web\Response;
 
 class WalletController extends Controller
 {
     /**
-     * Genera el JWT y redirige a la URL de Google Wallet.
+     * Definimos que para entrar a CUALQUIER acción de este 
+     * controlador, el usuario debe estar logueado.
      */
-    public function actionGoogle()
+    public function getAccessRules()
     {
-        $this->requireLogin();
-        $user     = Yii::$app->user->identity;
-
-        // Sincronizamos con el generador de tu vista
-        $ean      = QrGenerator::completarEAN13($user->profile->fax ?? '');
-        $fullName = $user->displayName ?? $user->username ?? '';
-
-        $saveUrl = (new GoogleWalletPass())->createSaveUrl($user->id, $fullName, $ean);
-
-        return $this->redirect($saveUrl);
+        return [
+            ['login']
+        ];
     }
 
     /**
-     * Genera el archivo .pkpass y lo sirve al iPhone.
+     * Acción para Apple Wallet (.pkpass)
      */
-    public function actionApple()
+    public function actionApple($ean)
     {
-        $this->requireLogin();
-        $user     = Yii::$app->user->identity;
+        $user = Yii::$app->user->identity;
 
-        $ean      = QrGenerator::completarEAN13($user->profile->fax ?? '');
-        $fullName = $user->displayName ?? $user->username ?? '';
+        $applePass = new AppleWalletPass();
+        $content = $applePass->createPass($user->id, $user->displayName, $ean);
 
-        // Importante: Llamamos a 'createPass' que devuelve el contenido binario
-        $passContent = (new AppleWalletPass())->createPass($user->id, $fullName, $ean);
+        if ($content) {
+            $response = Yii::$app->response;
+            $response->format = Response::FORMAT_RAW;
+            $response->headers->add('Content-Type', 'application/vnd.apple.pkpass');
+            $response->headers->add('Content-Disposition', 'attachment; filename="tarjeta_vegalsa.pkpass"');
 
-        if (!$passContent) {
-            throw new \yii\web\ServerErrorHttpException("No se pudo generar la tarjeta de Apple.");
+            return $content;
+        } else {
+            Yii::error("ERROR DETALLADO APPLE: " . $applePass->getLastError(), 'wallet');
         }
 
-        // Enviamos el contenido directamente como un archivo descargable
-        return Yii::$app->response->sendContentAsFile(
-            $passContent,
-            'tarjeta-empleado.pkpass',
-            [
-                'mimeType' => 'application/vnd.apple.pkpass',
-                'inline'   => false
-            ]
-        );
+        throw new HttpException(500, "Error al generar el archivo Apple Wallet.");
+    }
+
+    /**
+     * Acción para Google Wallet (Redirección)
+     */
+    public function actionGoogle()
+    {
+        $user = Yii::$app->user->identity;
+
+        // Recuperamos el EAN igual que en tu vista
+        $fax = $user->profile->fax ?? '';
+        $ean = QrGenerator::completarEAN13($fax);
+        $fullName = $user->displayName ?? $user->username ?? '';
+
+        // Generamos la URL firmada
+        $saveUrl = (new GoogleWalletPass())->createSaveUrl($user->id, $fullName, $ean);
+
+        // Redirigimos al usuario a la página de Google
+        return $this->redirect($saveUrl);
     }
 }
