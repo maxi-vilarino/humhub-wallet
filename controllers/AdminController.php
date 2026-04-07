@@ -11,6 +11,7 @@ class AdminController extends Controller
     public function actionIndex()
     {
         $form = new AdminSettingsForm();
+        $form->loadSettings();
 
         if ($form->load(Yii::$app->request->post()) && $form->validate()) {
             $form->save();
