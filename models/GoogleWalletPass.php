@@ -24,9 +24,9 @@ class GoogleWalletPass
      * Construye el objeto Generic Pass con diseño corporativo Vegalsa,
      * lo firma en JWT y devuelve la URL de guardado.
      */
-    public function createSaveUrl(int $userId, string $fullName, string $ean): string
+    public function createSaveUrl(int $userId, string $fullName, string $ean, string $logoUrl): string
     {
-        $objectId = "{$this->issuerId}.user_{$userId}" . time();
+        $objectId = "{$this->issuerId}.user_{$userId}";
 
         $genericObject = [
             'id'                 => $objectId,
@@ -38,7 +38,7 @@ class GoogleWalletPass
 
             'logo' => [
                 'sourceUri' => [
-                    'uri' => 'https://purgeable-nonspherical-teresa.ngrok-free.dev/themes/HumHub/vegalsa/logo_v3.png'
+                    'uri' => $logoUrl,
                 ]
             ],
 

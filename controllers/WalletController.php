@@ -59,8 +59,14 @@ class WalletController extends Controller
         $ean = QrGenerator::completarEAN13($fax);
         $fullName = $user->displayName ?? $user->username ?? '';
 
-        // Generamos la URL firmada
-        $saveUrl = (new GoogleWalletPass())->createSaveUrl($user->id, $fullName, $ean);
+         // Publica resources/vegalsa/ en web/assets/ y obtiene su URL
+        [, $publishedUrl] = Yii::$app->assetManager->publish(
+            Yii::getAlias('@wallet/resources/vegalsa')
+        );
+
+        $logoUrl = Yii::$app->urlManager->getHostInfo() . $publishedUrl . '/logo_v3.png';
+
+        $saveUrl = (new GoogleWalletPass())->createSaveUrl($user->id, $fullName, $ean, $logoUrl);
 
         // Redirigimos al usuario a la página de Google
         return $this->redirect($saveUrl);
